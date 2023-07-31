@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Body Skeleton</title>
+<script>
+
+/**
+ * The drawSkeleton() function takes an array of keypoints as an argument 
+ * and draws the skeleton on the canvas. 
+ */
+const drawSkeleton = (keypoints) => {
+  // Get the canvas element.
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+
+  // Clear the canvas.
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Scale the skeleton.
+  // ctx.scale(2, 2);
+  // Set the stroke weight.
+  // ctx.strokeWeight = 2;
+
+
+  // Draw the skeleton points
+  for (const keypoint of keypoints) {
+    const x = keypoint.x * canvas.width;
+    const y = keypoint.y * canvas.height;
+    // set color
+    // ctx.fillStyle = 'red';
+    // ctx.fillRect(x, y, 5, 5);
+
+    ctx.beginPath();
+    ctx.arc(x, y, 4, 0, 2 * Math.PI, false);
+    ctx.lineWidth = 3; // use this then no need stroke weight
+    ctx.strokeStyle = 'red'
+    ctx.stroke();
+    ctx.closePath();
+  }
+  connectSkeleton(keypoints, canvas, ctx);
+
+};
+
+/**
+ * 
+ * Key Points Mapping
+ * 
+ * 0 - nose
+ * 1 - left eye (inner)
+ * 2 - left eye
+ * 3 - left eye (outer)
+ * 4 - right eye (inner)
+ * 5 - right eye
+ * 6 - right eye (outer)
+ * 7 - left ear
+ * 8 - right ear
+ * 9 - mouth (left)
+ * 10 - mouth (right)
+ * 11 - left shoulder
+ * 12 - right shoulder
+ * 13 - left elbow
+ * 14 - right elbow
+ * 15 - left wrist
+ * 16 - right wrist
+ * 17 - left pinky
+ * 18 - right pinky
+ * 19 - left index
+ * 20 - right index
+ * 21 - left thumb
+ * 22 - right thumb
+ * 23 - left hip
+ * 24 - right hip
+ * 25 - left knee
+ * 26 - right knee
+ * 27 - left ankle
+ * 28 - right ankle
+ * 29 - left heel
+ * 30 - right heel
+ * 31 - left foot index
+ * 32 - right foot index
+*/
+function connectSkeleton(keypoints, canvas, ctx){
+
+  // line style
+  ctx.strokeStyle = 'black';
+  ctx.lineWidth = 3
+  
+  // connect right shoulder to left shoulder
+  drawLine(keypoints[12], keypoints[11], canvas, ctx);
+  drawLine(keypoints[12], keypoints[24], canvas, ctx);
+  drawLine(keypoints[24], keypoints[23], canvas, ctx);
+  drawLine(keypoints[11], keypoints[23], canvas, ctx);
+
+  // connect thai and legs
+  drawLine(keypoints[24], keypoints[26], canvas, ctx);
+  drawLine(keypoints[23], keypoints[25], canvas, ctx);
+  drawLine(keypoints[26], keypoints[28], canvas, ctx);
+  drawLine(keypoints[25], keypoints[27], canvas, ctx);
+
+  // connect hands
+  drawLine(keypoints[12], keypoints[14], canvas, ctx);
+  drawLine(keypoints[14], keypoints[16], canvas, ctx);
+  drawLine(keypoints[11], keypoints[13], canvas, ctx);
+  drawLine(keypoints[13], keypoints[15], canvas, ctx);
+
+  // connect Right hand figures
+  drawLine(keypoints[16], keypoints[22], canvas, ctx);
+  drawLine(keypoints[16], keypoints[18], canvas, ctx);
+  drawLine(keypoints[18], keypoints[20], canvas, ctx);
+  drawLine(keypoints[20], keypoints[16], canvas, ctx);
+
+  // connect left hand figures
+  drawLine(keypoints[15], keypoints[21], canvas, ctx);
+  drawLine(keypoints[15], keypoints[17], canvas, ctx);
+  drawLine(keypoints[17], keypoints[19], canvas, ctx);
+  drawLine(keypoints[19], keypoints[15], canvas, ctx);
+
+  // connect Head points
+  drawLine(keypoints[9], keypoints[10], canvas, ctx);
+
+  drawLine(keypoints[0], keypoints[4], canvas, ctx);
+  drawLine(keypoints[4], keypoints[5], canvas, ctx);
+  drawLine(keypoints[5], keypoints[6], canvas, ctx);
+  drawLine(keypoints[6], keypoints[8], canvas, ctx);
+
+  drawLine(keypoints[0], keypoints[1], canvas, ctx);
+  drawLine(keypoints[1], keypoints[2], canvas, ctx);
+  drawLine(keypoints[2], keypoints[3], canvas, ctx);
+  drawLine(keypoints[3], keypoints[7], canvas, ctx);
+
+  //connect right foot points
+  drawLine(keypoints[28], keypoints[30], canvas, ctx);
+  drawLine(keypoints[30], keypoints[32], canvas, ctx);
+  drawLine(keypoints[32], keypoints[28], canvas, ctx);
+  
+  //connect left foot points
+  drawLine(keypoints[27], keypoints[29], canvas, ctx);
+  drawLine(keypoints[29], keypoints[31], canvas, ctx);
+  drawLine(keypoints[31], keypoints[27], canvas, ctx);
+
+//
+// using below code to draw angles in the skeleton joints
+let params={
+    lineWidth: 9, // line width of the arc 
+    arc : [
+      {
+        keyPointIndex: [14, 12, 24], //right elbow, right shoulder, right hip
+        angle: 90, // // angle will be displayed on the UI: note: get this angle in Real time form the server response
+        drawArchFrom: 'left2right'
+      },
+      {
+        keyPointIndex: [13, 11, 23], //left elbow, left shoulder, left hip
+        angle: 87,
+        drawArchFrom: 'right2left'
+      }
+    ]
+  }
+
+  drawAngleArc(keypoints, canvas, ctx, params);
+}
+
+function drawLine(fromKeyPoint, toKeyPoint, canvas, ctx) {
+  const x1 = fromKeyPoint.x * canvas.width;
+  const y1 = fromKeyPoint.y * canvas.height;
+  const x2 = toKeyPoint.x * canvas.width;
+  const y2 = toKeyPoint.y * canvas.height;
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.stroke();
+}
+
+function drawAngleArc(keypoints, canvas, ctx, params){
+    const width = canvas.width;
+    const height = canvas.height;
+
+    const arcGradient = ctx.createLinearGradient(0, 0, 70, 0);
+    arcGradient.addColorStop(0, '#00B0FF');
+    arcGradient.addColorStop(1, '#FFC857');
+
+    // draw arc
+    for (const configData of params.arc ) {
+        side = configData.keyPointIndex
+
+        // Calculation for drawing arch
+        const p1 = { x: keypoints[side[0]]?.x * width, y: keypoints[side[0]]?.y * height };
+        const p2 = { x: keypoints[side[1]]?.x * width, y: keypoints[side[1]]?.y * height };
+        const p3 = { x: keypoints[side[2]]?.x * width, y: keypoints[side[2]]?.y * height };
+        const diffX = p1.x - p2.x;
+        const diffY = p1.y - p2.y;
+        const radius = Math.abs(Math.sqrt(diffX * diffX + diffY * diffY));
+        const startAngle = Math.atan2(diffY, diffX);
+        const endAngle = Math.atan2(p3.y - p2.y, p3.x - p2.x);
+
+        // draw arc
+        const angle = configData.angle 
+        
+        ctx.beginPath();
+        if (configData.drawArchFrom == 'left2right'){
+          ctx.arc(p2.x, p2.y, radius, startAngle, endAngle, true);
+        } else {
+          ctx.arc(p2.x, p2.y, radius, startAngle, endAngle, false);
+        }
+        ctx.lineWidth = params.lineWidth;
+        ctx.strokeStyle = arcGradient;
+        ctx.stroke();
+        ctx.closePath();
+
+        // draw angle text
+        ctx.beginPath();
+        // use below x, y for position your display angle 
+        const x = (p1.x + p3.x) / 2;
+        const y = (p1.y + p3.y) / 2.2;
+        ctx.fillStyle = '#FF4F38'
+        ctx.arc(x, y, 20, 0, 2 * Math.PI, false);
+        ctx.fill();
+        ctx.scale(-1, 1);
+        ctx.font = '20px CircularStd';
+        ctx.fillStyle = '#FFF';
+        ctx.textAlign = 'center';
+        ctx.fillText(`${angle}°`, -Math.abs(x), y + 10);
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.closePath();
+
+    }
+  };
+  
+</script>
+</head>
+  <body>
+    <!-- The canvas element will be used to draw the body skeleton. -->
+    <!-- <canvas id="canvas" width="640" height="480"></canvas>   -->
+    <canvas id="canvas" width="1280" height="960" style="transform: scaleX(-1);"></canvas>  
+  </body>
+
+  <script>
+    //IMP: Make sure canvas element is present. So always put this script after the canvas element or at the end of body tag.
+    // 33 keypoints
+    const bodyKeypoints = [
+        {
+          "x": 0.4383564889431,
+          "y": 0.0948251262307167,
+          "z": -0.2983896732330322,
+          "visibility": 0.9997484683990479
+        },
+        {
+          "x": 0.44540348649024963,
+          "y": 0.07682962715625763,
+          "z": -0.2751181721687317,
+          "visibility": 0.9994203448295593
+        },
+        {
+          "x": 0.4501148760318756,
+          "y": 0.07710392028093338,
+          "z": -0.27554047107696533,
+          "visibility": 0.999294102191925
+        },
+        {
+          "x": 0.45563092827796936,
+          "y": 0.07757040858268738,
+          "z": -0.2753404974937439,
+          "visibility": 0.9994065761566162
+        },
+        {
+          "x": 0.4319201111793518,
+          "y": 0.07670260220766068,
+          "z": -0.27695563435554504,
+          "visibility": 0.9995777010917664
+        },
+        {
+          "x": 0.42754679918289185,
+          "y": 0.0768282413482666,
+          "z": -0.2773643136024475,
+          "visibility": 0.9995980262756348
+        },
+        {
+          "x": 0.42344245314598083,
+          "y": 0.07729195058345795,
+          "z": -0.2775437533855438,
+          "visibility": 0.9995157718658447
+        },
+        {
+          "x": 0.4625013470649719,
+          "y": 0.0849229022860527,
+          "z": -0.13641200959682465,
+          "visibility": 0.9995658993721008
+        },
+        {
+          "x": 0.41761884093284607,
+          "y": 0.0869402065873146,
+          "z": -0.14522507786750793,
+          "visibility": 0.9991545677185059
+        },
+        {
+          "x": 0.44884172081947327,
+          "y": 0.1128087043762207,
+          "z": -0.2447996437549591,
+          "visibility": 0.999378502368927
+        },
+        {
+          "x": 0.4318729043006897,
+          "y": 0.11263463646173477,
+          "z": -0.249780535697937,
+          "visibility": 0.999355137348175
+        },
+        {
+          "x": 0.4986984133720398,
+          "y": 0.1864365041255951,
+          "z": -0.13609465956687927,
+          "visibility": 0.9998837113380432
+        },
+        {
+          "x": 0.3833272457122803,
+          "y": 0.1860220581293106,
+          "z": -0.15630042552947998,
+          "visibility": 0.9997236728668213
+        },
+        {
+          "x": 0.5423406958580017,
+          "y": 0.19641637802124023,
+          "z": -0.5127955675125122,
+          "visibility": 0.9226477146148682
+        },
+        {
+          "x": 0.3405724763870239,
+          "y": 0.21340124309062958,
+          "z": -0.5648402571678162,
+          "visibility": 0.9056383967399597
+        },
+        {
+          "x": 0.5666036605834961,
+          "y": 0.17467544972896576,
+          "z": -0.9478551745414734,
+          "visibility": 0.947923481464386
+        },
+        {
+          "x": 0.3234887421131134,
+          "y": 0.20777322351932526,
+          "z": -1.0144946575164795,
+          "visibility": 0.9696944355964661
+        },
+        {
+          "x": 0.5759481191635132,
+          "y": 0.17048338055610657,
+          "z": -1.0440857410430908,
+          "visibility": 0.9554929137229919
+        },
+        {
+          "x": 0.31362268328666687,
+          "y": 0.20051641762256622,
+          "z": -1.1190272569656372,
+          "visibility": 0.9723947644233704
+        },
+        {
+          "x": 0.5619314908981323,
+          "y": 0.16577912867069244,
+          "z": -1.0510990619659424,
+          "visibility": 0.9585650563240051
+        },
+        {
+          "x": 0.3262707591056824,
+          "y": 0.1924157589673996,
+          "z": -1.1156224012374878,
+          "visibility": 0.9712925553321838
+        },
+        {
+          "x": 0.555881142616272,
+          "y": 0.17097653448581696,
+          "z": -0.9647464752197266,
+          "visibility": 0.9356211423873901
+        },
+        {
+          "x": 0.3340945839881897,
+          "y": 0.19783225655555725,
+          "z": -1.0303304195404053,
+          "visibility": 0.9475935101509094
+        },
+        {
+          "x": 0.48384666442871094,
+          "y": 0.44960159063339233,
+          "z": 0.014964843168854713,
+          "visibility": 0.9999192953109741
+        },
+        {
+          "x": 0.4115782678127289,
+          "y": 0.45159798860549927,
+          "z": -0.015294378623366356,
+          "visibility": 0.9998930096626282
+        },
+        {
+          "x": 0.5091679692268372,
+          "y": 0.6557058095932007,
+          "z": 0.008972570300102234,
+          "visibility": 0.8359184265136719
+        },
+        {
+          "x": 0.40273547172546387,
+          "y": 0.6593913435935974,
+          "z": -0.03847853094339371,
+          "visibility": 0.8422403335571289
+        },
+        {
+          "x": 0.539476752281189,
+          "y": 0.8359929323196411,
+          "z": 0.19465750455856323,
+          "visibility": 0.9518754482269287
+        },
+        {
+          "x": 0.3814171552658081,
+          "y": 0.8377882242202759,
+          "z": 0.11747048795223236,
+          "visibility": 0.9636242389678955
+        },
+        {
+          "x": 0.531778872013092,
+          "y": 0.858148992061615,
+          "z": 0.19877400994300842,
+          "visibility": 0.6967472434043884
+        },
+        {
+          "x": 0.3856150507926941,
+          "y": 0.8569481372833252,
+          "z": 0.12206752598285675,
+          "visibility": 0.7007978558540344
+        },
+        {
+          "x": 0.5633630752563477,
+          "y": 0.9008008241653442,
+          "z": 0.013683910481631756,
+          "visibility": 0.9328482151031494
+        },
+        {
+          "x": 0.3574846088886261,
+          "y": 0.9092100262641907,
+          "z": -0.053048025816679,
+          "visibility": 0.9217481017112732
+        }
+    ];
+    
+    drawSkeleton(bodyKeypoints)
+  </script>
+</html>
